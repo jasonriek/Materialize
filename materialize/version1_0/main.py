@@ -6,7 +6,7 @@ from materialize.window import (Window)
 def main():
     app = QApplication(sys.argv)
     win = Window()
-    win.show()
+    win.showMaximized()
     sys.exit(app.exec())
 
 if __name__ == '__main__':
