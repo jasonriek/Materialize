@@ -2,7 +2,6 @@ import os
 import json
 import csv 
 import traceback
-from unicodedata import category
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QTreeWidget, QTreeWidgetItem)
@@ -15,6 +14,7 @@ class ItemTree(QTreeWidget):
     JSON_PATH = 'db/categories.json'
     def __init__(self, parent=None):
         super().__init__(parent)
+        ItemDatabase.createCategoryNameTable()
         self.data = {}
         self.root_item = QTreeWidgetItem(['Parts List'])
         #self.itemDoubleClicked.connect(self.showItem)
@@ -54,6 +54,7 @@ class ItemTree(QTreeWidget):
                 category_text = item.text(0)
                 ItemDatabase.createItemsTable(category_text)
                 ItemDatabase.insertItem(category_text, text)
+                ItemDatabase.insertCategoryName(category_text)
                 self.saveItems()
         return _addSubItem
 
@@ -68,12 +69,15 @@ class ItemTree(QTreeWidget):
                 if path:
                     with open(path, 'r') as f:
                         reader = csv.reader(f)
+                        ItemDatabase.createItemsTable(category_text)
+                        ItemDatabase.insertCategoryName(category_text)
                         for line in reader:
                             if line:
                                 item_text = line[0].strip()
                                 if item_text:
                                     item.addChild(QTreeWidgetItem([item_text]))
                                     ItemDatabase.insertItem(category_text, item_text)
+                        self.saveItems()
 
             except Exception as error:
                 QtWidgets.QMessageBox.critical(self,
@@ -88,7 +92,7 @@ class ItemTree(QTreeWidget):
             if not os.path.isdir('db'):
                 os.mkdir('db')
             with open(self.JSON_PATH, 'w') as json_file:
-                json.dump(self.data, json_file)
+                json.dump(self.data, json_file, indent=2)
             self.data.clear()
         except:
             print(f'ItemTree.saveItems() Error:\n{traceback.format_exc()}\n')
@@ -108,9 +112,15 @@ class ItemTree(QTreeWidget):
                     self.recursiveItemSave(child, data)
 
     def loadItems(self):
-        with open(self.JSON_PATH, 'r') as json_file:
-            self.data = json.load(json_file)
-            self.recursiveItemLoad(self.root_item, '', self.data)
+        try:
+            if not os.path.isfile(self.JSON_PATH):
+                open(self.JSON_PATH, 'w').close()
+            else:
+                with open(self.JSON_PATH, 'r') as json_file:
+                    self.data = json.load(json_file)
+                    self.recursiveItemLoad(self.root_item, '', self.data)
+        except Exception as error:
+            QtWidgets.QMessageBox.critical(self, 'Error', f'loadItems() Error: {str(error)}')
         return self.root_item
 
     def recursiveItemLoad(self, last_item:QTreeWidgetItem, key:str, data:dict):
