@@ -1,6 +1,6 @@
 import os
 import traceback
-from sqlbasics import (SQL, TEXT)
+from materialize.sqlbasics import (SQL, TEXT)
 
 
 class ItemDatabase:
@@ -18,7 +18,7 @@ class ItemDatabase:
         return table_name
 
     @staticmethod
-    def createItemsTable(category_name):
+    def createItemsTable(category_name:str):
         try:
             table_name = ItemDatabase.formatToTableName(category_name)
             if not os.path.isdir('db'):
@@ -31,7 +31,7 @@ class ItemDatabase:
             print(f'ItemDatabase.createItemsTable() Error: {traceback.format_exc()}')
     
     @staticmethod
-    def insertItem(category_name, item):
+    def insertItem(category_name:str, item:str):
         table_name = ItemDatabase.formatToTableName(category_name)
         if SQL.value(table_name, ItemDatabase.ITEMS_DESCRIPTION, ItemDatabase.ITEMS_DESCRIPTION, item, ItemDatabase.PATH):
             return False 
@@ -42,8 +42,15 @@ class ItemDatabase:
         return True 
     
     @staticmethod
-    def items(category_name):
+    def items(category_name:str):
         table_name = ItemDatabase.formatToTableName(category_name)
         return SQL.getColumn(table_name, ItemDatabase.ITEMS_DESCRIPTION, ItemDatabase.PATH)
+    
+    @staticmethod
+    def idFromItem(category_name:str, item:str):
+        table_name = ItemDatabase.formatToTableName(category_name)
+        return SQL.value(table_name, ItemDatabase.ITEMS_ID, ItemDatabase.ITEMS_DESCRIPTION, item, ItemDatabase.PATH)
 
-
+    @staticmethod
+    def categories():
+        return SQL.tableNames(ItemDatabase.PATH)
