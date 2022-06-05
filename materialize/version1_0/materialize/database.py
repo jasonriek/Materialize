@@ -8,18 +8,42 @@ class ItemDatabase:
     ITEMS_TABLE_NAME ='ITEMS'
     ITEMS_ID = 'id'
     ITEMS_DESCRIPTION = 'DESCRIPTION'
-    ITEMS_VENDOR = 'VENDOR'
     ITEMS_NOTES = 'NOTES'
-    
+
     @staticmethod
-    def createItemsTable():
+    def formatToTableName(table_name:str):
+        table_name = table_name.upper().strip()
+        table_split = [item.strip() for item in table_name.split() if item.strip()]
+        table_name = '_'.join(table_split)
+        return table_name
+
+    @staticmethod
+    def createItemsTable(category_name):
         try:
+            table_name = ItemDatabase.formatToTableName(category_name)
             if not os.path.isdir('db'):
                 os.mkdir('db')
-            SQL.createTable(ItemDatabase.ITEMS_TABLE_NAME,
+            SQL.createTable(table_name,
             {ItemDatabase.ITEMS_DESCRIPTION: TEXT,
-            ItemDatabase.ITEMS_VENDOR: TEXT,
             ItemDatabase.ITEMS_NOTES: TEXT}, 
             ItemDatabase.PATH)
         except:
             print(f'ItemDatabase.createItemsTable() Error: {traceback.format_exc()}')
+    
+    @staticmethod
+    def insertItem(category_name, item):
+        table_name = ItemDatabase.formatToTableName(category_name)
+        if SQL.value(table_name, ItemDatabase.ITEMS_DESCRIPTION, ItemDatabase.ITEMS_DESCRIPTION, item, ItemDatabase.PATH):
+            return False 
+        SQL.insert(table_name, {
+            ItemDatabase.ITEMS_DESCRIPTION: item,
+            ItemDatabase.ITEMS_NOTES: '',
+        }, ItemDatabase.PATH)
+        return True 
+    
+    @staticmethod
+    def items(category_name):
+        table_name = ItemDatabase.formatToTableName(category_name)
+        return SQL.getColumn(table_name, ItemDatabase.ITEMS_DESCRIPTION, ItemDatabase.PATH)
+
+

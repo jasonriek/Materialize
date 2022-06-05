@@ -8,7 +8,7 @@ BLOB = 'BLOB'
 
 def formatToTableName(table_name:str):
     table_name = table_name.upper().strip()
-    table_split = table_name.split()
+    table_split = [item.strip() for item in table_name.split() if item.strip()]
     table_name = '_'.join(table_split)
     return table_name
 
