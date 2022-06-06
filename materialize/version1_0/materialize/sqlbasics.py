@@ -159,7 +159,7 @@ class SQL:
             values =  [row[0] for row in cursor.execute(sql).fetchall() if row]
 
         except Exception as error:
-            print(f'SQL.getColumn({table_name}, {column_name}) Error: {str(error)}')
+            print(f'SQL.getColumn({table_name}, {column_name}) Error: {str(error)}\nTraceback: {traceback.format_exc()}')
         
         finally:
             if database:

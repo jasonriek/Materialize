@@ -28,18 +28,29 @@ class Window(QtWidgets.QMainWindow):
         self.search_entry.returnPressed.connect(self.search)
         self.search_table = SearchTable(self)
         self.search_table.itemDoubleClicked.connect(self.addItem)
+        self.tree.itemSentToTable.connect(self.addItemFromTree)
 
         self.material_table = MaterialTable(self)
 
         self.setupLayout()
     
-    def addItem(self, item:QtWidgets.QTreeWidgetItem, colunmn:int):
-        item_text = item.text(0)
-        category = item.text(1).split('/')[-2]
-        notes = ItemDatabase.notes(category, item_text)
+    @QtCore.Slot(str, str)
+    def addItemFromTree(self, category_name:str, item_text:str):
+        notes = ItemDatabase.notes(category_name, item_text)
         item_row = self.material_table.itemAtRow(item_text)
         if item_row == -1:   
-            self.material_table.addItem(1, item_text, category, notes)
+            self.material_table.addItem(1, item_text, category_name, notes)
+        else:
+            self.material_table.cellWidget(item_row, self.material_table.QUANTITY_COL).inc()
+
+
+    def addItem(self, item:QtWidgets.QTreeWidgetItem, colunmn:int):
+        item_text = item.text(0)
+        category_name = item.text(1).split('/')[-2]
+        notes = ItemDatabase.notes(category_name, item_text)
+        item_row = self.material_table.itemAtRow(item_text)
+        if item_row == -1:   
+            self.material_table.addItem(1, item_text, category_name, notes)
         else:
             self.material_table.cellWidget(item_row, self.material_table.QUANTITY_COL).inc()
 

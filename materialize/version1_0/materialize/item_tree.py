@@ -5,34 +5,43 @@ import traceback
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QTreeWidget, QTreeWidgetItem)
-from PySide6.QtCore import (Qt, QPoint)
+from PySide6.QtCore import (Qt, QPoint, Signal)
 from PySide6.QtGui import (QAction)
 
 from materialize.database import ItemDatabase
 
 class ItemTree(QTreeWidget):
     JSON_PATH = 'db/categories.json'
+    # Signals 
+    itemSentToTable = Signal(str, str)
     def __init__(self, parent=None):
         super().__init__(parent)
         ItemDatabase.createCategoryNameTable()
         self.data = {}
         self.root_item = QTreeWidgetItem(['Parts List'])
-        #self.itemDoubleClicked.connect(self.showItem)
+        self.itemDoubleClicked.connect(self.addItemToTable)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.showContextMenu)
     
+    def addItemToTable(self, item:QTreeWidgetItem):
+        item_parent = item.parent()
+        if item_parent:
+            category_name = item_parent.text(0)
+            item_text = item.text(0)
+            self.itemSentToTable.emit(category_name, item_text)
+
     def showContextMenu(self, position:QPoint):
         item = self.itemAt(position)
         if not item:
             return 
         menu = QtWidgets.QMenu(self)
-        show_item_action = QAction('Show Item Text', self)
-        show_item_action.triggered.connect(self.showItem(item))
+        #show_item_action = QAction('Show Item Text', self)
+        #show_item_action.triggered.connect(self.showItem(item))
         add_sub_item_action = QAction('Add Sub-Item', self)
         add_sub_item_action.triggered.connect(self.addSubItem(item))
         add_sub_items_action = QAction('Add Sub-Items', self)
         add_sub_items_action.triggered.connect(self.addSubItems(item))
-        menu.addAction(show_item_action)
+        #menu.addAction(show_item_action)
         menu.addSeparator()
         menu.addAction(add_sub_item_action)
         menu.addAction(add_sub_items_action)
@@ -129,12 +138,14 @@ class ItemTree(QTreeWidget):
                 item = QTreeWidgetItem([sub_key])
                 last_item.addChild(item)
                 self.recursiveItemLoad(item, sub_key, sub_data)
-            items = ItemDatabase.items(key)
-            for item in items:
-                if item not in data.keys():
-                    last_item.addChild(QTreeWidgetItem([item]))
+            if key:
+                items = ItemDatabase.items(key)
+                for item in items:
+                    if item not in data.keys():
+                        last_item.addChild(QTreeWidgetItem([item]))
         else:
-            items = ItemDatabase.items(key)
-            for item in items:
-                last_item.addChild(QTreeWidgetItem([item]))
+            if key:
+                items = ItemDatabase.items(key)
+                for item in items:
+                    last_item.addChild(QTreeWidgetItem([item]))
         return
