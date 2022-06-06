@@ -59,7 +59,7 @@ class ItemDatabase:
     @staticmethod
     def insertCategoryName(category_name:str):
         table_name = ItemDatabase.formatToTableName(category_name)
-        if SQL.value(ItemDatabase.CATEGORY_NAMES_TABLE_NAME, ItemDatabase.CAT_TABLE_NAME, ItemDatabase.CAT_TABLE_NAME, category_name, ItemDatabase.PATH):
+        if SQL.value(ItemDatabase.CATEGORY_NAMES_TABLE_NAME, ItemDatabase.CAT_TABLE_NAME, ItemDatabase.CAT_TABLE_NAME, table_name, ItemDatabase.PATH):
             return False 
         SQL.insert(ItemDatabase.CATEGORY_NAMES_TABLE_NAME, {
             ItemDatabase.CAT_TABLE_NAME: table_name,
