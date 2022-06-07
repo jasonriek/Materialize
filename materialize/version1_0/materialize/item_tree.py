@@ -9,6 +9,7 @@ from PySide6.QtCore import (Qt, QPoint, Signal)
 from PySide6.QtGui import (QAction)
 
 from materialize.database import ItemDatabase
+from materialize.util import (toref)
 
 class ItemTree(QTreeWidget):
     JSON_PATH = 'db/categories.json'
@@ -47,52 +48,49 @@ class ItemTree(QTreeWidget):
         menu.addAction(add_sub_items_action)
         menu.exec(self.viewport().mapToGlobal(position))
 
+    @toref
     def showItem(self, item:QTreeWidgetItem):
-        def _showItem():
-            if item.parent():
-                category_name = item.parent().text(0)
-                item_name = item.text(0)
-                print(ItemDatabase.idFromItem(category_name, item_name))
-        return _showItem
+        if item.parent():
+            category_name = item.parent().text(0)
+            item_name = item.text(0)
+            print(ItemDatabase.idFromItem(category_name, item_name))
 
+    @toref 
     def addSubItem(self, item:QTreeWidgetItem):
-        def _addSubItem():
-            text, ok = QtWidgets.QInputDialog.getText(self, f'Sub-Item Off of "{item.text(0)}"', 'Name:')
-            if ok and text:
-                item.addChild(QTreeWidgetItem([text]))
-                category_text = item.text(0)
-                ItemDatabase.createItemsTable(category_text)
-                ItemDatabase.insertItem(category_text, text)
-                ItemDatabase.insertCategoryName(category_text)
-                self.saveItems()
-        return _addSubItem
+        text, ok = QtWidgets.QInputDialog.getText(self, f'Sub-Item Off of "{item.text(0)}"', 'Name:')
+        if ok and text:
+            item.addChild(QTreeWidgetItem([text]))
+            category_text = item.text(0)
+            ItemDatabase.createItemsTable(category_text)
+            ItemDatabase.insertItem(category_text, text)
+            ItemDatabase.insertCategoryName(category_text)
+            self.saveItems()
 
+    @toref
     def addSubItems(self, item:QTreeWidgetItem):
-        def _addSubItems():
-            try:
-                category_text = item.text(0)
-                path,_ = QtWidgets.QFileDialog.getOpenFileName(self,
-                f'Open Items File for "{item.text(0)}"',
-                '',
-                'CSV (*.csv)')
-                if path:
-                    with open(path, 'r') as f:
-                        reader = csv.reader(f)
-                        ItemDatabase.createItemsTable(category_text)
-                        ItemDatabase.insertCategoryName(category_text)
-                        for line in reader:
-                            if line:
-                                item_text = line[0].strip()
-                                if item_text:
-                                    item.addChild(QTreeWidgetItem([item_text]))
-                                    ItemDatabase.insertItem(category_text, item_text)
-                        self.saveItems()
+        try:
+            category_text = item.text(0)
+            path,_ = QtWidgets.QFileDialog.getOpenFileName(self,
+            f'Open Items File for "{item.text(0)}"',
+            '',
+            'CSV (*.csv)')
+            if path:
+                with open(path, 'r') as f:
+                    reader = csv.reader(f)
+                    ItemDatabase.createItemsTable(category_text)
+                    ItemDatabase.insertCategoryName(category_text)
+                    for line in reader:
+                        if line:
+                            item_text = line[0].strip()
+                            if item_text:
+                                item.addChild(QTreeWidgetItem([item_text]))
+                                ItemDatabase.insertItem(category_text, item_text)
+                    self.saveItems()
 
-            except Exception as error:
-                QtWidgets.QMessageBox.critical(self,
-                'Error',
-                f'addSubItems() Error: {str(error)}')
-        return _addSubItems
+        except Exception as error:
+            QtWidgets.QMessageBox.critical(self,
+            'Error',
+            f'addSubItems() Error: {str(error)}')
     
     def saveItems(self):
         try:
