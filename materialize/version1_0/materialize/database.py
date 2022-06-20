@@ -55,6 +55,17 @@ class ItemDatabase:
             ItemDatabase.ITEMS_NOTES: '',
         }, ItemDatabase.PATH)
         return True 
+    
+    @staticmethod
+    def removeItem(category_name:str, item:str):
+        table_name = ItemDatabase.formatToTableName(category_name)
+        if table_name in SQL.tableNames(ItemDatabase.PATH):
+            SQL.remove(table_name,
+            ItemDatabase.ITEMS_DESCRIPTION,
+            item, 
+            ItemDatabase.PATH)
+        else:
+            print(f'{table_name} does not exist.')
 
     @staticmethod
     def insertCategoryName(category_name:str):

@@ -42,10 +42,14 @@ class ItemTree(QTreeWidget):
         add_sub_item_action.triggered.connect(self.addSubItem(item))
         add_sub_items_action = QAction('Add Sub-Items', self)
         add_sub_items_action.triggered.connect(self.addSubItems(item))
+        remove_sub_item_action = QAction('Remove', self)
+        remove_sub_item_action.triggered.connect(self.removeSubItem(item))
         #menu.addAction(show_item_action)
         menu.addSeparator()
         menu.addAction(add_sub_item_action)
         menu.addAction(add_sub_items_action)
+        menu.addSeparator()
+        menu.addAction(remove_sub_item_action)
         menu.exec(self.viewport().mapToGlobal(position))
 
     @toref
@@ -65,7 +69,20 @@ class ItemTree(QTreeWidget):
             ItemDatabase.insertItem(category_text, text)
             ItemDatabase.insertCategoryName(category_text)
             self.saveItems()
-
+    
+    @toref 
+    def removeSubItem(self, item:QTreeWidgetItem):
+        item_text = item.text(0)
+        message = QtWidgets.QMessageBox.warning(self, 
+        'Remove?', f'Are you sure you want to remove "{item_text}"?', 
+        (QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No))
+        if message == QtWidgets.QMessageBox.Yes:
+            parent = item.parent()
+            if parent:
+                category_name = parent.text(0)
+                item.parent().removeChild(item)
+                ItemDatabase.removeItem(category_name, item_text)
+                self.saveItems()
     @toref
     def addSubItems(self, item:QTreeWidgetItem):
         try:
